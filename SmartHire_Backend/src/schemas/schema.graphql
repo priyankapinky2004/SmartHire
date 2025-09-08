@@ -1,0 +1,240 @@
+# src/schemas/schema.graphql
+
+type User {
+  id: ID!
+  email: String!
+  firstName: String
+  lastName: String
+  role: UserRole!
+  createdAt: String!
+  updatedAt: String!
+}
+
+enum UserRole {
+  CANDIDATE
+  RECRUITER
+  ADMIN
+}
+
+type Resume {
+  id: ID!
+  userId: ID!
+  originalFilename: String!
+  parsedData: ResumeData
+  uploadedAt: String!
+  status: ParseStatus!
+}
+
+type ResumeData {
+  skills: [String!]
+  experience: [Experience!]
+  education: [Education!]
+  contact: ContactInfo
+}
+
+type Experience {
+  company: String!
+  title: String!
+  startDate: String!
+  endDate: String
+  description: String
+}
+
+type Education {
+  institution: String!
+  degree: String!
+  field: String
+  startDate: String
+  endDate: String
+}
+
+type ContactInfo {
+  email: String!
+  phone: String
+  location: String
+}
+
+enum ParseStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+type Assessment {
+  id: ID!
+  candidateId: ID!
+  title: String!
+  sections: [AssessmentSection!]!
+  status: AssessmentStatus!
+  createdAt: String!
+  updatedAt: String!
+  emotionData: [EmotionDataPoint!]
+  score: Float
+}
+
+type AssessmentSection {
+  id: ID!
+  title: String!
+  questions: [Question!]!
+  timeAllowed: Int
+}
+
+type Question {
+  id: ID!
+  type: QuestionType!
+  content: String!
+  options: [String!]
+  correctAnswer: String
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  CODING
+}
+
+enum AssessmentStatus {
+  CREATED
+  SENT
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+}
+
+type EmotionDataPoint {
+  timestamp: String!
+  emotion: EmotionType!
+  confidence: Float!
+  screenshotId: ID
+}
+
+enum EmotionType {
+  HAPPY
+  NEUTRAL
+  SAD
+  DISTRESS
+  ANGER
+}
+
+type Interview {
+  id: ID!
+  candidateId: ID!
+  recruiterId: ID!
+  scheduledTime: String!
+  status: InterviewStatus!
+  zoomMeetingId: String
+  zoomRecordingId: String
+  transcript: String
+  aiScores: [QuestionScore!]
+  overallScore: Int
+  decision: InterviewDecision
+}
+
+type QuestionScore {
+  questionId: ID!
+  question: String!
+  score: Int!
+  feedback: String
+}
+
+type HealthCheckResult {
+  status: String!
+  timestamp: String!
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum InterviewDecision {
+  NOT_SELECTED
+  ON_HOLD
+  ADDITIONAL_INTERVIEW_REQUIRED
+  SELECTED
+}
+
+type Query {
+  # User queries
+  me: User
+
+  # Resume queries
+  getResume(id: ID!): Resume
+
+  # Assessment queries
+  getAssessment(id: ID!): Assessment
+  getCandidateAssessments(candidateId: ID!): [Assessment!]!
+
+  # Interview queries
+  getInterview(id: ID!): Interview
+  getCandidateInterviews(candidateId: ID!): [Interview!]!
+  getRecruiterInterviews(recruiterId: ID!): [Interview!]!
+
+  healthCheck: HealthCheckResult!
+}
+
+type Mutation {
+  # User mutations
+  updateUserProfile(firstName: String, lastName: String): User!
+
+  # Resume mutations
+  uploadResume(file: Upload!): Resume!
+
+  # Assessment mutations
+  createAssessment(
+    candidateId: ID!
+    title: String!
+    sections: [AssessmentSectionInput!]!
+  ): Assessment!
+  startAssessment(assessmentId: ID!): Assessment!
+  submitAssessment(assessmentId: ID!, answers: [AnswerInput!]!): Assessment!
+  recordEmotionData(assessmentId: ID!, emotionData: EmotionDataInput!): Boolean!
+
+  # Interview mutations
+  scheduleInterview(
+    candidateId: ID!
+    recruiterId: ID!
+    scheduledTime: String!
+  ): Interview!
+  completeInterview(
+    interviewId: ID!
+    scores: [QuestionScoreInput!]!
+    overallScore: Int!
+    decision: InterviewDecision
+  ): Interview!
+}
+
+input AssessmentSectionInput {
+  title: String!
+  questions: [QuestionInput!]!
+  timeAllowed: Int
+}
+
+input QuestionInput {
+  type: QuestionType!
+  content: String!
+  options: [String!]
+  correctAnswer: String
+}
+
+input AnswerInput {
+  questionId: ID!
+  answer: String!
+}
+
+input EmotionDataInput {
+  timestamp: String!
+  emotion: EmotionType!
+  confidence: Float!
+  screenshot: Upload
+}
+
+input QuestionScoreInput {
+  questionId: ID!
+  question: String!
+  score: Int!
+  feedback: String
+}
+
+scalar Upload

@@ -1,0 +1,36 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String    @id @default(uuid())
+  email      String    @unique
+  firstName  String?
+  lastName   String?
+  role       String
+  externalId String?   @unique // For Keycloak integration
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Interview {
+  id             String   @id @default(uuid())
+  candidateId    String
+  recruiterId    String
+  scheduledTime  DateTime
+  status         String
+  zoomMeetingId  String?
+  zoomRecordingId String?
+  transcript     String?
+  overallScore   Int?
+  decision       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
